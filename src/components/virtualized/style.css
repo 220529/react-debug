@@ -1,0 +1,26 @@
+.container {
+  height: 250px;
+  width: 1000px;
+  margin: 50px auto;
+  border: red 1px solid;
+  position: relative;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background-color: #e6f4ff;
+}
+.slider {
+  width: 100%;
+  position: absolute;
+}
+.content {
+  width: 100%;
+  position: absolute;
+}
+.item {
+  padding: 5px;
+  color: #555;
+  box-sizing: border-box;
+  background-color: #d9f7be;
+  border-bottom: #555 1px solid;
+  box-sizing: border-box;
+}

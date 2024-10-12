@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>移动到末尾</title>
+  <style>
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 8px;
+      border: 1px solid #ddd;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>列表</h1>
+  <ul id="myList">
+    <li>元素 1</li>
+    <li>元素 2</li>
+    <li>元素 3</li>
+    <li>元素 4</li>
+  </ul>
+  <button onclick="moveFirstToLast()">移动到末尾</button>
+
+  <script>
+    function moveFirstToLast() {
+      const list = document.getElementById('myList');
+      const firstItem = list.firstElementChild;
+      if (firstItem) {
+        list.appendChild(firstItem);
+      }
+    }
+  </script>
+</body>
+
+</html>
