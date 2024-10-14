@@ -13,8 +13,8 @@ import ConcurrentApp from "@/components/batching/Concurrent";
 function App() {
   return (
     <div id="app">
-      <RefApp />
-      {/* <Counter /> */}
+      {/* <RefApp /> */}
+      <Counter />
       {/* <UseEffectApp /> */}
       {/* <UseIdApp /> */}
       {/* <EmptyComponent /> */}
