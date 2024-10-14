@@ -9,7 +9,7 @@
 
 /* eslint-disable no-var */
 
-import type {PriorityLevel} from '../SchedulerPriorities';
+import type { PriorityLevel } from "../SchedulerPriorities";
 
 import {
   enableSchedulerDebugging,
@@ -18,9 +18,9 @@ import {
   userBlockingPriorityTimeout,
   lowPriorityTimeout,
   normalPriorityTimeout,
-} from '../SchedulerFeatureFlags';
+} from "../SchedulerFeatureFlags";
 
-import {push, pop, peek} from '../SchedulerMinHeap';
+import { push, pop, peek } from "../SchedulerMinHeap";
 
 // TODO: Use symbols?
 import {
@@ -29,7 +29,7 @@ import {
   NormalPriority,
   LowPriority,
   IdlePriority,
-} from '../SchedulerPriorities';
+} from "../SchedulerPriorities";
 import {
   markTaskRun,
   markTaskYield,
@@ -41,9 +41,9 @@ import {
   markTaskStart,
   stopLoggingProfilingEvents,
   startLoggingProfilingEvents,
-} from '../SchedulerProfiling';
+} from "../SchedulerProfiling";
 
-export type Callback = boolean => ?Callback;
+export type Callback = (boolean) => ?Callback;
 
 export opaque type Task = {
   id: number,
@@ -58,7 +58,7 @@ export opaque type Task = {
 let getCurrentTime: () => number | DOMHighResTimeStamp;
 const hasPerformanceNow =
   // $FlowFixMe[method-unbinding]
-  typeof performance === 'object' && typeof performance.now === 'function';
+  typeof performance === "object" && typeof performance.now === "function";
 
 if (hasPerformanceNow) {
   const localPerformance = performance;
@@ -94,11 +94,11 @@ var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
-const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
+const localSetTimeout = typeof setTimeout === "function" ? setTimeout : null;
 const localClearTimeout =
-  typeof clearTimeout === 'function' ? clearTimeout : null;
+  typeof clearTimeout === "function" ? clearTimeout : null;
 const localSetImmediate =
-  typeof setImmediate !== 'undefined' ? setImmediate : null; // IE and Node.js + jsdom
+  typeof setImmediate !== "undefined" ? setImmediate : null; // IE and Node.js + jsdom
 
 function advanceTimers(currentTime: number) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -199,7 +199,7 @@ function workLoop(initialTime: number) {
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
     const callback = currentTask.callback;
-    if (typeof callback === 'function') {
+    if (typeof callback === "function") {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentTask.callback = null;
       // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -212,7 +212,7 @@ function workLoop(initialTime: number) {
       }
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
-      if (typeof continuationCallback === 'function') {
+      if (typeof continuationCallback === "function") {
         // If a continuation is returned, immediately yield to the main thread
         // regardless of how much time is left in the current time slice.
         // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -254,7 +254,7 @@ function workLoop(initialTime: number) {
 
 function unstable_runWithPriority<T>(
   priorityLevel: PriorityLevel,
-  eventHandler: () => T,
+  eventHandler: () => T
 ): T {
   switch (priorityLevel) {
     case ImmediatePriority:
@@ -322,14 +322,14 @@ function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
 function unstable_scheduleCallback(
   priorityLevel: PriorityLevel,
   callback: Callback,
-  options?: {delay: number},
+  options?: { delay: number }
 ): Task {
   var currentTime = getCurrentTime();
 
   var startTime;
-  if (typeof options === 'object' && options !== null) {
+  if (typeof options === "object" && options !== null) {
     var delay = options.delay;
-    if (typeof delay === 'number' && delay > 0) {
+    if (typeof delay === "number" && delay > 0) {
       startTime = currentTime + delay;
     } else {
       startTime = currentTime;
@@ -471,9 +471,9 @@ function requestPaint() {}
 function forceFrameRate(fps: number) {
   if (fps < 0 || fps > 125) {
     // Using console['error'] to evade Babel and ESLint
-    console['error'](
-      'forceFrameRate takes a positive int between 0 and 125, ' +
-        'forcing frame rates higher than 125 fps is not supported',
+    console["error"](
+      "forceFrameRate takes a positive int between 0 and 125, " +
+        "forcing frame rates higher than 125 fps is not supported"
     );
     return;
   }
@@ -514,33 +514,36 @@ const performWorkUntilDeadline = () => {
 };
 
 let schedulePerformWorkUntilDeadline;
-if (typeof localSetImmediate === 'function') {
-  // Node.js and old IE.
-  // There's a few reasons for why we prefer setImmediate.
+
+if (typeof localSetImmediate === "function") {
+  // Node.js 和旧版 IE 环境。
+  // 有几个原因说明我们优先使用 setImmediate。
   //
-  // Unlike MessageChannel, it doesn't prevent a Node.js process from exiting.
-  // (Even though this is a DOM fork of the Scheduler, you could get here
-  // with a mix of Node.js 15+, which has a MessageChannel, and jsdom.)
-  // https://github.com/facebook/react/issues/20756
+  // 与 MessageChannel 不同，它不会阻止 Node.js 进程退出。
+  // （即使这是调度器的 DOM 分支，你可能会在混合 Node.js 15+
+  // 的情况下到达这里，该版本有 MessageChannel 和 jsdom。）
+  // 参考链接: https://github.com/facebook/react/issues/20756
   //
-  // But also, it runs earlier which is the semantic we want.
-  // If other browsers ever implement it, it's better to use it.
-  // Although both of these would be inferior to native scheduling.
+  // 而且，它运行得更早，这是我们想要的语义。
+  // 如果其他浏览器也实现了它，使用它会更好。
+  // 尽管这两者都不如原生调度的效果好。
   schedulePerformWorkUntilDeadline = () => {
     localSetImmediate(performWorkUntilDeadline);
   };
-} else if (typeof MessageChannel !== 'undefined') {
-  // DOM and Worker environments.
-  // We prefer MessageChannel because of the 4ms setTimeout clamping.
-  const channel = new MessageChannel();
-  const port = channel.port2;
-  channel.port1.onmessage = performWorkUntilDeadline;
+} else if (typeof MessageChannel !== "undefined") {
+  // DOM 和 Worker 环境。
+  // 我们优先使用 MessageChannel，因为它避免了 4ms setTimeout 的限制。
+  const channel = new MessageChannel(); // 创建一个新的消息通道
+  const port = channel.port2; // 获取通道的端口 2
+  channel.port1.onmessage = performWorkUntilDeadline; // 监听端口 1 的消息
   schedulePerformWorkUntilDeadline = () => {
-    port.postMessage(null);
+    port.postMessage(null); // 向端口 2 发送消息以触发工作
   };
 } else {
-  // We should only fallback here in non-browser environments.
+  // 我们只在非浏览器环境中回退到这里。
   schedulePerformWorkUntilDeadline = () => {
+    // 使用 localSetTimeout（尽管可能会是 null），
+    // 将 performWorkUntilDeadline 安排到下一个事件循环。
     // $FlowFixMe[not-a-function] nullable value
     localSetTimeout(performWorkUntilDeadline, 0);
   };
@@ -549,13 +552,14 @@ if (typeof localSetImmediate === 'function') {
 function requestHostCallback() {
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
+    console.log("requestHostCallback...");
     schedulePerformWorkUntilDeadline();
   }
 }
 
 function requestHostTimeout(
   callback: (currentTime: number) => void,
-  ms: number,
+  ms: number
 ) {
   // $FlowFixMe[not-a-function] nullable value
   taskTimeoutID = localSetTimeout(() => {

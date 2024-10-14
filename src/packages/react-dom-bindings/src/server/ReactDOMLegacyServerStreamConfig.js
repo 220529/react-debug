@@ -34,14 +34,14 @@ export function beginWriting(destination: Destination) {}
 
 export function writeChunk(
   destination: Destination,
-  chunk: Chunk | PrecomputedChunk | BinaryChunk,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk
 ): void {
   writeChunkAndReturn(destination, chunk);
 }
 
 export function writeChunkAndReturn(
   destination: Destination,
-  chunk: Chunk | PrecomputedChunk | BinaryChunk,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk
 ): boolean {
   return destination.push(chunk);
 }
@@ -61,9 +61,9 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
 }
 
 export function typedArrayToBinaryChunk(
-  content: $ArrayBufferView,
+  content: $ArrayBufferView
 ): BinaryChunk {
-  throw new Error('Not implemented.');
+  throw new Error("Not implemented.");
 }
 
 export const byteLengthOfChunk:
@@ -71,7 +71,7 @@ export const byteLengthOfChunk:
   | ((chunk: Chunk | PrecomputedChunk) => number) = null;
 
 export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
-  throw new Error('Not implemented.');
+  throw new Error("Not implemented.");
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
@@ -79,4 +79,4 @@ export function closeWithError(destination: Destination, error: mixed): void {
   destination.destroy(error);
 }
 
-export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';
+export { createFastHashJS as createFastHash } from "react-server/src/createFastHashJS";

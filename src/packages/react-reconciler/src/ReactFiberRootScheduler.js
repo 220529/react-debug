@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {FiberRoot} from './ReactInternalTypes';
-import type {Lane, Lanes} from './ReactFiberLane';
-import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
-import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import type { FiberRoot } from "./ReactInternalTypes";
+import type { Lane, Lanes } from "./ReactFiberLane";
+import type { PriorityLevel } from "scheduler/src/SchedulerPriorities";
+import type { BatchConfigTransition } from "./ReactFiberTracingMarkerComponent";
 
 import {
   disableLegacyMode,
@@ -18,7 +18,7 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableProfilerTimer,
   enableProfilerNestedUpdatePhase,
-} from 'shared/ReactFeatureFlags';
+} from "shared/ReactFeatureFlags";
 import {
   NoLane,
   NoLanes,
@@ -29,7 +29,7 @@ import {
   markStarvedLanesAsExpired,
   claimNextTransitionLane,
   getNextLanesToFlushSync,
-} from './ReactFiberLane';
+} from "./ReactFiberLane";
 import {
   CommitContext,
   NoContext,
@@ -40,8 +40,8 @@ import {
   getWorkInProgressRootRenderLanes,
   isWorkLoopSuspendedOnData,
   performWorkOnRoot,
-} from './ReactFiberWorkLoop';
-import {LegacyRoot} from './ReactRootTags';
+} from "./ReactFiberWorkLoop";
+import { LegacyRoot } from "./ReactRootTags";
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
@@ -50,25 +50,25 @@ import {
   cancelCallback as Scheduler_cancelCallback,
   scheduleCallback as Scheduler_scheduleCallback,
   now,
-} from './Scheduler';
+} from "./Scheduler";
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
   lanesToEventPriority,
-} from './ReactEventPriorities';
+} from "./ReactEventPriorities";
 import {
   supportsMicrotasks,
   scheduleMicrotask,
   shouldAttemptEagerTransition,
-} from './ReactFiberConfig';
+} from "./ReactFiberConfig";
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from "shared/ReactSharedInternals";
 import {
   resetNestedUpdateFlag,
   syncNestedUpdateFlag,
-} from './ReactProfilerTimer';
+} from "./ReactProfilerTimer";
 
 // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
@@ -164,137 +164,143 @@ export function flushSyncWorkOnLegacyRootsOnly() {
 }
 
 function flushSyncWorkAcrossRoots_impl(
-  syncTransitionLanes: Lanes | Lane,
-  onlyLegacy: boolean,
+  syncTransitionLanes, // 需要被同步处理的 transition lanes
+  onlyLegacy // 是否仅处理 legacy（老旧模式）的 root
 ) {
   if (isFlushingWork) {
-    // Prevent reentrancy.
-    // TODO: Is this overly defensive? The callers must check the execution
-    // context first regardless.
+    // 防止函数重入（reentrancy），如果已经在处理工作，则直接返回。
+    // 这种防御性检查确保不会在嵌套调用时多次执行刷新。
     return;
   }
 
   if (!mightHavePendingSyncWork) {
-    // Fast path. There's no sync work to do.
+    // 快速路径：如果没有同步工作需要处理，直接返回。
     return;
   }
 
-  // There may or may not be synchronous work scheduled. Let's check.
+  // 初始化标志，用于记录是否有实际的工作被执行。
   let didPerformSomeWork;
-  isFlushingWork = true;
+  isFlushingWork = true; // 标记当前正在处理同步工作。
+
+  // 开始执行同步工作，确保所有需要处理的 root 都被刷新。
   do {
-    didPerformSomeWork = false;
-    let root = firstScheduledRoot;
+    didPerformSomeWork = false; // 重置标志，开始一轮工作。
+    let root = firstScheduledRoot; // 从调度队列中的第一个 root 开始处理。
+
     while (root !== null) {
+      // 如果只处理 legacy 模式并且该 root 不是 legacy 模式的，跳过该 root。
       if (onlyLegacy && (disableLegacyMode || root.tag !== LegacyRoot)) {
-        // Skip non-legacy roots.
+        // 跳过非 legacy 模式的 root。
       } else {
+        // 如果 syncTransitionLanes 存在，则尝试处理对应的同步工作。
         if (syncTransitionLanes !== NoLanes) {
           const nextLanes = getNextLanesToFlushSync(root, syncTransitionLanes);
           if (nextLanes !== NoLanes) {
-            // This root has pending sync work. Flush it now.
-            didPerformSomeWork = true;
-            performSyncWorkOnRoot(root, nextLanes);
+            // 如果这个 root 有需要同步刷新的工作，执行该工作。
+            didPerformSomeWork = true; // 标记为已执行工作。
+            performSyncWorkOnRoot(root, nextLanes); // 执行同步工作。
           }
         } else {
-          const workInProgressRoot = getWorkInProgressRoot();
+          // 如果没有 syncTransitionLanes，检查是否有同步工作。
+          const workInProgressRoot = getWorkInProgressRoot(); // 获取当前正在工作的 root。
           const workInProgressRootRenderLanes =
-            getWorkInProgressRootRenderLanes();
+            getWorkInProgressRootRenderLanes(); // 获取当前渲染中的 lanes。
           const nextLanes = getNextLanes(
             root,
+            // 如果 root 是当前的工作 root，则使用它的 lanes；否则不使用 lanes。
             root === workInProgressRoot
               ? workInProgressRootRenderLanes
-              : NoLanes,
+              : NoLanes
           );
           if (includesSyncLane(nextLanes)) {
-            // This root has pending sync work. Flush it now.
-            didPerformSomeWork = true;
-            performSyncWorkOnRoot(root, nextLanes);
+            // 如果这个 root 有同步工作的 lane，执行该工作。
+            didPerformSomeWork = true; // 标记为已执行工作。
+            performSyncWorkOnRoot(root, nextLanes); // 执行同步工作。
           }
         }
       }
+      // 移动到下一个 root 继续检查。
       root = root.next;
     }
   } while (didPerformSomeWork);
-  isFlushingWork = false;
+  // 只要有工作执行过，就会继续执行循环，直到没有同步工作为止。
+
+  isFlushingWork = false; // 处理完成后，重置标记。
 }
 
 function processRootScheduleInMicrotask() {
-  // This function is always called inside a microtask. It should never be
-  // called synchronously.
-  didScheduleMicrotask = false;
+  // 此函数总是在微任务中调用，不能同步调用。
+  didScheduleMicrotask = false; // 表示当前不再计划微任务。
   if (__DEV__) {
+    // 如果处于开发模式下，额外记录是否计划了微任务（仅在 act 测试中使用）。
     didScheduleMicrotask_act = false;
   }
 
-  // We'll recompute this as we iterate through all the roots and schedule them.
+  // 我们将重新计算是否有可能存在同步工作。
   mightHavePendingSyncWork = false;
 
-  let syncTransitionLanes = NoLanes;
+  let syncTransitionLanes = NoLanes; // 代表没有需要同步渲染的 Transition 工作。
   if (currentEventTransitionLane !== NoLane) {
+    // 检查当前事件中是否有正在进行的 Transition（异步更新）。
     if (shouldAttemptEagerTransition()) {
-      // A transition was scheduled during an event, but we're going to try to
-      // render it synchronously anyway. We do this during a popstate event to
-      // preserve the scroll position of the previous page.
+      // 如果条件允许，我们会尝试将 Transition 工作同步渲染。
+      // 例如：在 popstate（浏览器回退/前进）事件中，我们会尝试同步渲染以保留页面滚动位置。
       syncTransitionLanes = currentEventTransitionLane;
     }
-    currentEventTransitionLane = NoLane;
+    currentEventTransitionLane = NoLane; // 处理完后，清空当前的 Transition。
   }
 
-  const currentTime = now();
+  const currentTime = now(); // 获取当前时间，用于调度任务。
 
-  let prev = null;
-  let root = firstScheduledRoot;
+  let prev = null; // 记录链表中的前一个 root。
+  let root = firstScheduledRoot; // 从链表的第一个 root 开始迭代调度。
   while (root !== null) {
-    const next = root.next;
+    // 遍历所有调度中的 root 节点。
+    const next = root.next; // 保存下一个 root 的引用，以便继续遍历。
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
-    if (nextLanes === NoLane) {
-      // This root has no more pending work. Remove it from the schedule. To
-      // guard against subtle reentrancy bugs, this microtask is the only place
-      // we do this — you can add roots to the schedule whenever, but you can
-      // only remove them here.
+    // 计算当前 root 在本次微任务中的需要处理的工作（Lanes）。
 
-      // Null this out so we know it's been removed from the schedule.
+    if (nextLanes === NoLane) {
+      // 如果 root 没有更多的待处理工作，说明可以将其从调度队列中移除。
+
+      // 清除 root 的 next 指针，表示它已从调度链表中移除。
       root.next = null;
       if (prev === null) {
-        // This is the new head of the list
+        // 如果 prev 为 null，说明当前 root 是第一个节点，将链表头更新为下一个 root。
         firstScheduledRoot = next;
       } else {
+        // 否则，将前一个 root 的 next 指向下一个 root，跳过当前 root。
         prev.next = next;
       }
       if (next === null) {
-        // This is the new tail of the list
+        // 如果 next 为 null，说明当前 root 是最后一个节点，更新链表的尾部。
         lastScheduledRoot = prev;
       }
     } else {
-      // This root still has work. Keep it in the list.
+      // 如果 root 仍然有工作需要处理，将其保留在调度链表中。
       prev = root;
 
-      // This is a fast-path optimization to early exit from
-      // flushSyncWorkOnAllRoots if we can be certain that there is no remaining
-      // synchronous work to perform. Set this to true if there might be sync
-      // work left.
+      // 这是一个快速路径优化，目的是尽早退出 `flushSyncWorkOnAllRoots`。
+      // 如果我们确定没有剩余的同步工作可以执行时，就可以退出。
+      // 如果 syncTransitionLanes 已被设置，跳过此优化。
       if (
-        // Skip the optimization if syncTransitionLanes is set
-        syncTransitionLanes !== NoLanes ||
-        // Common case: we're not treating any extra lanes as synchronous, so we
-        // can just check if the next lanes are sync.
-        includesSyncLane(nextLanes)
+        syncTransitionLanes !== NoLanes || // 如果有同步 Transition 工作，就标记同步工作存在。
+        includesSyncLane(nextLanes) // 否则，检查是否有同步的 lanes。
       ) {
-        mightHavePendingSyncWork = true;
+        mightHavePendingSyncWork = true; // 标记当前可能存在同步工作。
       }
     }
-    root = next;
+    root = next; // 移动到下一个 root 继续遍历。
   }
 
-  // At the end of the microtask, flush any pending synchronous work. This has
-  // to come at the end, because it does actual rendering work that might throw.
+  // 在微任务的末尾，刷新所有待处理的同步工作。
+  // 必须放在最后执行，因为这些工作涉及实际的渲染操作，可能会抛出错误。
   flushSyncWorkAcrossRoots_impl(syncTransitionLanes, false);
 }
 
 function scheduleTaskForRootDuringMicrotask(
   root: FiberRoot,
-  currentTime: number,
+  currentTime: number
 ): Lane {
   // This function is always called inside a microtask, or at the very end of a
   // rendering task right before we yield to the main thread. It should never be
@@ -315,7 +321,7 @@ function scheduleTaskForRootDuringMicrotask(
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
   const nextLanes = getNextLanes(
     root,
-    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
   );
 
   const existingCallbackNode = root.callbackNode;
@@ -394,7 +400,7 @@ function scheduleTaskForRootDuringMicrotask(
 
     const newCallbackNode = scheduleCallback(
       schedulerPriorityLevel,
-      performWorkOnRootViaSchedulerTask.bind(null, root),
+      performWorkOnRootViaSchedulerTask.bind(null, root)
     );
 
     root.callbackPriority = newCallbackPriority;
@@ -407,7 +413,7 @@ type RenderTaskFn = (didTimeout: boolean) => RenderTaskFn | null;
 
 function performWorkOnRootViaSchedulerTask(
   root: FiberRoot,
-  didTimeout: boolean,
+  didTimeout: boolean
 ): RenderTaskFn | null {
   // This is the entry point for concurrent tasks scheduled via Scheduler (and
   // postTask, in the future).
@@ -448,7 +454,7 @@ function performWorkOnRootViaSchedulerTask(
   const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
   const lanes = getNextLanes(
     root,
-    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
   );
   if (lanes === NoLanes) {
     // No more work on this root.
@@ -479,18 +485,25 @@ function performWorkOnRootViaSchedulerTask(
 }
 
 function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes) {
-  // This is the entry point for synchronous tasks that don't go
-  // through Scheduler.
+  // 这是同步任务的入口点，这些任务不通过 Scheduler 处理。
+
+  // 刷新被动效果，并检查是否有被动效果被执行
   const didFlushPassiveEffects = flushPassiveEffects();
   if (didFlushPassiveEffects) {
-    // If passive effects were flushed, exit to the outer work loop in the root
-    // scheduler, so we can recompute the priority.
-    return null;
+    // 如果被动效果已被刷新，退出到根调度器的外部工作循环，
+    // 以便重新计算优先级。
+    return null; // 退出当前函数，不进行进一步的处理
   }
+
+  // 如果启用了性能分析器计时器和嵌套更新阶段，更新嵌套更新标志
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     syncNestedUpdateFlag();
   }
+
+  // 强制同步渲染
   const forceSync = true;
+
+  // 执行根节点的工作，使用强制同步标志
   performWorkOnRoot(root, lanes, forceSync);
 }
 
@@ -498,7 +511,7 @@ const fakeActCallbackNode = {};
 
 function scheduleCallback(
   priorityLevel: PriorityLevel,
-  callback: RenderTaskFn,
+  callback: RenderTaskFn
 ) {
   if (__DEV__ && ReactSharedInternals.actQueue !== null) {
     // Special case: We're inside an `act` scope (a testing utility).
@@ -565,7 +578,7 @@ export function requestTransitionLane(
   // This argument isn't used, it's only here to encourage the caller to
   // check that it's inside a transition before calling this function.
   // TODO: Make this non-nullable. Requires a tweak to useOptimistic.
-  transition: BatchConfigTransition | null,
+  transition: BatchConfigTransition | null
 ): Lane {
   // The algorithm for assigning an update to a lane should be stable for all
   // updates at the same priority within the same event. To do this, the
