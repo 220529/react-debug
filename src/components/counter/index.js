@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 const Count = () => {
   const [count, setCount] = useState(0);
   const handleIncrement = () => {
-    setCount(e => {
+    setCount((e) => {
       // console.log("setCount...", e);
-      return e + 1
+      return e + 1;
     });
   };
 
@@ -16,9 +16,9 @@ const Count = () => {
     };
   }, [count]);
 
-  return (
-    <button onClick={handleIncrement}>{count}</button>
-  );
+  // setCount((e) => e + 1);
+
+  return <button onClick={handleIncrement}>{count}</button>;
 };
 
 export default Count;
