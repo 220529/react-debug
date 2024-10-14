@@ -16,7 +16,7 @@ const AutomaticBatchingExample = () => {
     // 在异步回调中进行多个状态更新
     setTimeout(() => {
       console.log("Async update start");
-      setCount((prev) => prev + 1);
+      // setCount((prev) => prev + 1);
       setText("Updated Text");
       console.log("Async update end");
     }, 100);
