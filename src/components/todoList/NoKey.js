@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const TodoListWithoutKey = () => {
   const [todos, setTodos] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
 
   const handleAddTodo = () => {
     if (input.trim()) {
       setTodos([...todos, { text: input }]);
-      setInput('');
+      setInput("");
     }
   };
 
@@ -16,9 +16,9 @@ const TodoListWithoutKey = () => {
   };
 
   const handleTextChange = (index, newText) => {
-    setTodos(todos.map((todo, i) =>
-      i === index ? { ...todo, text: newText } : todo
-    ));
+    setTodos(
+      todos.map((todo, i) => (i === index ? { ...todo, text: newText } : todo))
+    );
   };
 
   const handleDelete = (index) => {

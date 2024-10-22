@@ -10,10 +10,17 @@ import EmptyComponent from "@/components/EmptyComponent";
 import AutomaticApp from "@/components/batching/Automatic";
 import ConcurrentApp from "@/components/batching/Concurrent";
 
+// import TodoList from "@/components/todoList";
+// import TodoListNoKey from "@/components/todoList/NoKey";
+// import TodoListWithKey from "@/components/todoList/WithKey";
+
+import TodoListNoKey from "@/components/render-list/NoKey";
+
 function App() {
   return (
     <div id="app">
       <RefApp />
+      {/* <RefApp /> */}
       {/* <Counter /> */}
       {/* <UseEffectApp /> */}
       {/* <UseIdApp /> */}
@@ -24,6 +31,10 @@ function App() {
 
       {/* <AutomaticApp /> */}
       {/* <ConcurrentApp /> */}
+
+      {/* <TodoList /> */}
+      <TodoListNoKey />
+      {/* <TodoListWithKey /> */}
     </div>
   );
 }
