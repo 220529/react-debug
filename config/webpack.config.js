@@ -320,6 +320,7 @@ module.exports = function (webpackEnv) {
           "scheduler/tracing": "scheduler/tracing-profiling",
         }),
         ...(modules.webpackAliases || {}),
+        "@/hooks": path.join(paths.appSrc, "hooks"),
         "@/components": path.join(paths.appSrc, "components"),
       },
       plugins: [
@@ -423,6 +424,15 @@ module.exports = function (webpackEnv) {
                 ],
 
                 plugins: [
+                  [
+                    require.resolve("@ns-widget/react-error-boundary-plugin"),
+                    {
+                      imports: `import withErrorHandler from "@/components/hoc/withErrorHandler"`,
+                      errorHandleComponent: "withErrorHandler",
+                      ignore: ["WrappedComponent", "ReactErrorBoundary"],
+                      // risks: ["UserBio"],
+                    },
+                  ],
                   isEnvDevelopment &&
                     shouldUseReactRefresh &&
                     require.resolve("react-refresh/babel"),
@@ -430,7 +440,7 @@ module.exports = function (webpackEnv) {
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
                 // directory for faster rebuilds.
-                cacheDirectory: true,
+                // cacheDirectory: true,
                 // See #6846 for context on why cacheCompression is disabled
                 cacheCompression: false,
                 compact: isEnvProduction,

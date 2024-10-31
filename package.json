@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@babel/core": "^7.16.0",
+    "@ns-widget/react-error-boundary": "^0.0.3",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.17.0",
@@ -135,5 +136,11 @@
     "presets": [
       "react-app"
     ]
+  },
+  "devDependencies": {
+    "@babel/template": "^7.25.9",
+    "@ns-widget/react-error-boundary-plugin": "^0.0.3",
+    "html-tags": "^3.3.1",
+    "react-error-boundary": "^4.1.2"
   }
 }
