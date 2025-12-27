@@ -313,13 +313,10 @@ module.exports = function (webpackEnv) {
         .filter((ext) => useTypeScript || !ext.includes("ts")),
       alias: {
         "@/components": path.join(paths.appSrc, "components"),
+        // React 19.3.0 构建产物
         react: path.join(paths.reactSrc, "react"),
         "react-dom": path.join(paths.reactSrc, "react-dom"),
-        "react-client": path.join(paths.reactSrc, "react-client"),
-        shared: path.join(paths.reactSrc, "shared"),
         scheduler: path.join(paths.reactSrc, "scheduler"),
-        "react-reconciler": path.join(paths.reactSrc, "react-reconciler"),
-        "react-dom-bindings": path.join(paths.reactSrc, "react-dom-bindings"),
       },
       plugins: [
         // Prevents users from importing files from outside of src/ (or node_modules/).

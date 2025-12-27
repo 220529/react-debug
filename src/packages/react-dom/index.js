@@ -1,25 +1,26 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+'use strict';
 
-export {default as __DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './src/ReactDOMSharedInternals';
-export {
-  createPortal,
-  flushSync,
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinit,
-  preinitModule,
-  requestFormReset,
-  unstable_batchedUpdates,
-  useFormState,
-  useFormStatus,
-  version,
-} from './src/shared/ReactDOM';
+function checkDCE() {
+  /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== 'function'
+  ) {
+    return;
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    throw new Error('^_^');
+  }
+  try {
+    __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE(checkDCE);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+if (process.env.NODE_ENV === 'production') {
+  checkDCE();
+  module.exports = require('./cjs/react-dom.production.js');
+} else {
+  module.exports = require('./cjs/react-dom.development.js');
+}
